@@ -42,7 +42,7 @@ bool midi_processor::process_mids( std::vector<uint8_t> const& p_file, midi_cont
 	}
 
     it += fmt_size;
-    if ( fmt_size & 1 ) it++;
+    if ( fmt_size & 1 ) ++it;
 
 	p_out.initialize( 0, time_format );
 
@@ -65,8 +65,6 @@ bool midi_processor::process_mids( std::vector<uint8_t> const& p_file, midi_cont
     it += 4;
 
 	bool is_eight_byte = !!(flags & 1);
-
-    it += 4;
 
 	midi_track track;
 

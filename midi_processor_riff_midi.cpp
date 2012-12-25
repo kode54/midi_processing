@@ -45,7 +45,7 @@ bool midi_processor::process_riff_midi( std::vector<uint8_t> const& p_file, midi
 {
     uint32_t file_size = p_file[ 4 ] | ( p_file[ 5 ] << 8 ) | ( p_file[ 6 ] << 16 ) | ( p_file[ 7 ] << 24 );
 
-    std::vector<uint8_t>::const_iterator it = p_file.begin() + 8;
+    std::vector<uint8_t>::const_iterator it = p_file.begin() + 12;
 
     std::vector<uint8_t>::const_iterator body_end = p_file.begin() + 8 + file_size;
 
@@ -107,6 +107,7 @@ bool midi_processor::process_riff_midi( std::vector<uint8_t> const& p_file, midi
 						}
                         extra_buffer.resize( field_size );
                         std::copy( it + 8, it + 8 + field_size, extra_buffer.begin() );
+                        it += 8 + field_size;
                         meta_data.add_item( midi_meta_data_item( 0, field.c_str(), ( const char * ) &extra_buffer[0] ) );
                         if ( field_size & 1 && it < chunk_end ) ++it;
 					}

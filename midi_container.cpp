@@ -64,7 +64,7 @@ void midi_track::add_event( const midi_event & p_event )
 
     if ( m_events.size() )
 	{
-        midi_event & event = *(--it);
+        midi_event & event = *(it - 1);
 		if ( event.m_type == midi_event::extended && event.get_data_count() >= 2 &&
 			event.m_data[ 0 ] == 0xFF && event.m_data[ 1 ] == 0x2F )
 		{
@@ -103,7 +103,7 @@ tempo_entry::tempo_entry(unsigned p_timestamp, unsigned p_tempo)
 
 void tempo_map::add_tempo( unsigned p_tempo, unsigned p_timestamp )
 {
-    auto it = m_entries.begin();
+    auto it = m_entries.end();
 
     while ( it > m_entries.begin() )
 	{
@@ -128,19 +128,20 @@ unsigned tempo_map::timestamp_to_ms( unsigned p_timestamp, unsigned p_dtx ) cons
     auto tempo_it = m_entries.begin();
 	unsigned current_tempo = 500000;
 
-	p_dtx *= 1000;
+    unsigned half_dtx = p_dtx * 500;
+    p_dtx = half_dtx * 2;
 
     while ( tempo_it < m_entries.end() && timestamp + p_timestamp >= (*tempo_it).m_timestamp )
 	{
         unsigned delta = (*tempo_it).m_timestamp - timestamp;
-        timestamp_ms += (uint64_t)current_tempo * (uint64_t)delta / p_dtx;
+        timestamp_ms += ((uint64_t)current_tempo * (uint64_t)delta + half_dtx) / p_dtx;
         current_tempo = (*tempo_it).m_tempo;
         ++tempo_it;
 		timestamp += delta;
 		p_timestamp -= delta;
 	}
 
-    timestamp_ms += (uint64_t)current_tempo * (uint64_t)p_timestamp / p_dtx;
+    timestamp_ms += ((uint64_t)current_tempo * (uint64_t)p_timestamp + half_dtx) / p_dtx;
 
 	return timestamp_ms;
 }
@@ -267,7 +268,8 @@ unsigned midi_container::timestamp_to_ms( unsigned p_timestamp, unsigned p_subso
     std::size_t tempo_index = 0;
 	unsigned current_tempo = 500000;
 
-	unsigned p_dtx = m_dtx * 1000;
+    unsigned half_dtx = m_dtx * 500;
+    unsigned p_dtx = half_dtx * 2;
 
     unsigned subsong_count = m_tempo_map.size();
 
@@ -293,7 +295,7 @@ unsigned midi_container::timestamp_to_ms( unsigned p_timestamp, unsigned p_subso
 		while ( tempo_index < tempo_count && timestamp + p_timestamp >= m_entries[ tempo_index ].m_timestamp )
 		{
 			unsigned delta = m_entries[ tempo_index ].m_timestamp - timestamp;
-            timestamp_ms += (uint64_t)current_tempo * (uint64_t)delta / p_dtx;
+            timestamp_ms += ((uint64_t)current_tempo * (uint64_t)delta + half_dtx) / p_dtx;
 			current_tempo = m_entries[ tempo_index ].m_tempo;
 			++tempo_index;
 			timestamp += delta;
@@ -301,7 +303,7 @@ unsigned midi_container::timestamp_to_ms( unsigned p_timestamp, unsigned p_subso
 		}
 	}
 
-    timestamp_ms += (uint64_t)current_tempo * (uint64_t)p_timestamp / p_dtx;
+    timestamp_ms += ((uint64_t)current_tempo * (uint64_t)p_timestamp + half_dtx) / p_dtx;
 
 	return timestamp_ms;
 }
@@ -448,7 +450,7 @@ void midi_container::set_extra_meta_data( const midi_meta_data & p_data )
 void midi_container::serialize_as_stream( unsigned subsong, std::vector<midi_stream_event> & p_stream, system_exclusive_table & p_system_exclusive, unsigned clean_flags ) const
 {
     std::vector<uint8_t> data;
-    std::vector<uint8_t> track_positions;
+    std::vector<std::size_t> track_positions;
     std::vector<uint8_t> port_numbers;
     std::vector<std::string> device_names;
     std::size_t track_count = m_tracks.size();

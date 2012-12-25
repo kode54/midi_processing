@@ -126,6 +126,7 @@ static bool read_iff_chunk( std::vector<uint8_t>::const_iterator & it, std::vect
 	else if ( !is_form_chunk && !is_cat_chunk )
 	{
         p_out.m_data.assign( it, it + chunk_size );
+        it += chunk_size;
         if ( chunk_size & 1 && it < end ) ++it;
 	}
 	else
