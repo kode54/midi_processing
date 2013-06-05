@@ -351,7 +351,7 @@ void midi_container::add_track( const midi_track & p_track )
 		else if ( event.m_type == midi_event::extended && event.get_data_count() >= 3 &&
 			event.m_data[ 0 ] == 0xFF )
 		{
-			if ( event.m_data[ 1 ] == 4 )
+            if ( event.m_data[ 1 ] == 4 || event.m_data[1] == 9 )
 			{
 				unsigned data_count = event.get_data_count() - 2;
                 data.resize( data_count );
@@ -440,6 +440,19 @@ void midi_container::add_track_event( std::size_t p_track_index, const midi_even
 	{
 		m_timestamp_end[ p_track_index ] = p_event.m_timestamp;
 	}
+}
+
+void midi_container::merge_tracks( const midi_container & p_source )
+{
+    for ( unsigned i = 0; i < p_source.m_tracks.get_count(); i++ )
+    {
+        add_track( p_source.m_tracks[ i ] );
+    }
+}
+
+void midi_container::set_track_count( unsigned count )
+{
+    m_tracks.set_count( count );
 }
 
 void midi_container::set_extra_meta_data( const midi_meta_data & p_data )
@@ -585,7 +598,7 @@ void midi_container::serialize_as_stream( unsigned subsong, std::vector<midi_str
 				}
 				else if ( data_count >= 3 && event.m_data[ 0 ] == 0xFF )
 				{
-					if ( event.m_data[ 1 ] == 4 )
+                    if ( event.m_data[ 1 ] == 4 || event.m_data[ 1 ] == 9 )
 					{
 						unsigned data_count = event.get_data_count() - 2;
                         data.resize( data_count );

@@ -14,6 +14,7 @@ QMAKE_CXXFLAGS += -std=c++0x
 
 SOURCES += \
     midi_processor_xmi.cpp \
+    midi_processor_syx.cpp \
     midi_processor_standard_midi.cpp \
     midi_processor_riff_midi.cpp \
     midi_processor_mus.cpp \

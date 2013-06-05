@@ -169,7 +169,12 @@ public:
 
     void add_track_event( std::size_t p_track_index, const midi_event & p_event );
 
-	void set_extra_meta_data( const midi_meta_data & p_data );
+    /*
+     * These functions are really only designed to merge and later remove System Exclusive message dumps
+     */
+    void merge_tracks( const midi_container & p_source );
+    void set_track_count( unsigned count );
+    void set_extra_meta_data( const midi_meta_data & p_data );
 
     void serialize_as_stream( unsigned subsong, std::vector<midi_stream_event> & p_stream, system_exclusive_table & p_system_exclusive, unsigned clean_flags ) const;
 

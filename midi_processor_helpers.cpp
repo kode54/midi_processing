@@ -57,3 +57,12 @@ bool midi_processor::process_file( std::vector<uint8_t> const& p_file, const cha
     }
     else return false;
 }
+
+bool midi_processor::process_syx_file( std::vector<uint8_t> const& p_file, midi_container & p_out )
+{
+    if ( is_syx( p_file ) )
+    {
+        return process_syx( p_file, p_out );
+    }
+    else return false;
+}
