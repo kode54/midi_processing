@@ -9,7 +9,8 @@ bool midi_processor::is_syx( std::vector<uint8_t> const& p_file )
 
 bool midi_processor::process_syx( std::vector<uint8_t> const& p_file, midi_container & p_out )
 {
-    const size_t ptr = 0, size = p_file.size();
+    const size_t size = p_file.size();
+    size_t ptr = 0;
 
     p_out.initialize( 0, 1 );
 
@@ -17,7 +18,7 @@ bool midi_processor::process_syx( std::vector<uint8_t> const& p_file, midi_conta
 
     while ( ptr < size )
     {
-        const size_t msg_length = 1;
+        size_t msg_length = 1;
 
         if ( p_file[ptr] != 0xF0 ) return false;
 
