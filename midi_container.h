@@ -149,6 +149,8 @@ private:
     std::vector<tempo_map> m_tempo_map;
     std::vector<midi_track> m_tracks;
 
+    std::vector<uint8_t> m_port_numbers;
+
     std::vector< std::vector< std::string > > m_device_names;
 
 	midi_meta_data m_extra_meta_data;
@@ -159,6 +161,35 @@ private:
     std::vector<unsigned> m_timestamp_loop_end;
 
     unsigned timestamp_to_ms( unsigned p_timestamp, unsigned p_subsong ) const;
+
+    /*
+     * Normalize port numbers properly
+     */
+    template <typename T> void limit_port_number(T & number)
+    {
+        for ( unsigned i = 0; i < m_port_numbers.size(); i++ )
+        {
+            if ( m_port_numbers[ i ] == number )
+            {
+                number = i;
+                return;
+            }
+        }
+        m_port_numbers.push_back( number );
+        number = m_port_numbers.size() - 1;
+    }
+
+    template <typename T> void limit_port_number(T & number) const
+    {
+        for ( unsigned i = 0; i < m_port_numbers.size(); i++ )
+        {
+            if ( m_port_numbers[ i ] == number )
+            {
+                number = i;
+                return;
+            }
+        }
+    }
 
 public:
     midi_container() { m_device_names.resize( 16 ); }

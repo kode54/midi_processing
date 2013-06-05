@@ -362,6 +362,7 @@ void midi_container::add_track( const midi_track & p_track )
 			else if ( event.m_data[ 1 ] == 0x21 )
 			{
 				port_number = event.m_data[ 2 ];
+                limit_port_number( port_number );
                 device_name.clear();
 			}
 		}
@@ -381,6 +382,8 @@ void midi_container::add_track( const midi_track & p_track )
                     m_device_names[ channel ].push_back( device_name );
 					port_number = j;
 				}
+                device_name.clear();
+                limit_port_number( port_number );
 			}
 
 			channel += 16 * port_number;
@@ -444,7 +447,7 @@ void midi_container::add_track_event( std::size_t p_track_index, const midi_even
 
 void midi_container::merge_tracks( const midi_container & p_source )
 {
-    for ( unsigned i = 0; i < p_source.m_tracks.get_count(); i++ )
+    for ( unsigned i = 0; i < p_source.m_tracks.size(); i++ )
     {
         add_track( p_source.m_tracks[ i ] );
     }
@@ -452,7 +455,7 @@ void midi_container::merge_tracks( const midi_container & p_source )
 
 void midi_container::set_track_count( unsigned count )
 {
-    m_tracks.set_count( count );
+    m_tracks.resize( count );
 }
 
 void midi_container::set_extra_meta_data( const midi_meta_data & p_data )
@@ -564,6 +567,7 @@ void midi_container::serialize_as_stream( unsigned subsong, std::vector<midi_str
 					}
 					port_numbers[ next_track ] = i;
                     device_names[ next_track ].clear();
+                    limit_port_number( port_numbers[ next_track ] );
 				}
 
 				unsigned event_code = ( ( event.m_type + 8 ) << 4 ) + event.m_channel;
@@ -586,6 +590,7 @@ void midi_container::serialize_as_stream( unsigned subsong, std::vector<midi_str
 						}
 						port_numbers[ next_track ] = i;
                         device_names[ next_track ].clear();
+                        limit_port_number( port_numbers[ next_track ] );
 					}
 
                     data.resize( data_count );
@@ -611,6 +616,7 @@ void midi_container::serialize_as_stream( unsigned subsong, std::vector<midi_str
 					{
 						port_numbers[ next_track ] = event.m_data[ 2 ];
                         device_names[ next_track ].clear();
+                        limit_port_number( port_numbers[ next_track ] );
 					}
 				}
 			}
