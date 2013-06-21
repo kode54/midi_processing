@@ -1,7 +1,7 @@
 #ifndef _MIDI_CONTAINER_H_
 #define _MIDI_CONTAINER_H_
 
-#include <cstdint>
+#include <stdint.h>
 #include <string>
 #include <vector>
 
