@@ -211,6 +211,8 @@ public:
 
     void serialize_as_standard_midi_file( std::vector<uint8_t> & p_midi_file ) const;
 
+    void promote_to_type1();
+
     unsigned get_subsong_count() const;
     unsigned get_subsong( unsigned p_index ) const;
 

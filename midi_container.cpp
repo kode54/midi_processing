@@ -712,6 +712,57 @@ void midi_container::serialize_as_standard_midi_file( std::vector<uint8_t> & p_m
 	}
 }
 
+void midi_container::promote_to_type1()
+{
+	if ( m_form == 0 && m_tracks.size() <= 2 )
+	{
+		bool meter_track_present = false;
+		midi_track new_tracks[17];
+		midi_track original_data_track = m_tracks[ m_tracks.size() - 1 ];
+		if ( m_tracks.size() > 1 )
+		{
+			new_tracks[0] = m_tracks[0];
+			meter_track_present = true;
+		}
+
+		m_tracks.resize( 0 );
+
+		for ( std::size_t i = 0; i < original_data_track.get_count(); ++i )
+		{
+			const midi_event & event = original_data_track[ i ];
+
+			if ( event.m_type != midi_event::extended )
+			{
+				new_tracks[ 1 + event.m_channel ].add_event( event );
+			}
+			else
+			{
+				if ( event.m_data[0] != 0xFF || event.get_data_count() < 2 || event.m_data[1] != 0x2F )
+				{
+					new_tracks[ 0 ].add_event( event );
+				}
+				else
+				{
+					if ( !meter_track_present )
+						new_tracks[ 0 ].add_event( event );
+					for ( std::size_t j = 1; j < 17; ++j )
+					{
+						new_tracks[ j ].add_event( event );
+					}
+				}
+			}
+		}
+
+		for ( std::size_t i = 0; i < 17; ++i )
+		{
+			if ( new_tracks[ i ].get_count() > 1 )
+				add_track( new_tracks[ i ] );
+		}
+
+		m_form = 1;
+	}
+}
+
 unsigned midi_container::get_subsong_count() const
 {
 	unsigned subsong_count = 0;
