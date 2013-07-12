@@ -3,9 +3,11 @@
 
 #include "midi_container.h"
 
+#ifndef _countof
 template <typename T, size_t N>
 char ( &_ArraySizeHelper( T (&array)[N] ))[N];
 #define _countof( array ) (sizeof( _ArraySizeHelper( array ) ))
+#endif
 
 class midi_processor
 {
