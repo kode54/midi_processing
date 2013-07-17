@@ -11,6 +11,7 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 QMAKE_CXXFLAGS += -std=c++0x
+macx:QMAKE_CXXFLAGS += -mmacosx-version-min=10.7 -stdlib=libc++
 
 SOURCES += \
     midi_processor_xmi.cpp \
