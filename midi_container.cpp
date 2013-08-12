@@ -686,9 +686,12 @@ void midi_container::serialize_as_standard_midi_file( std::vector<uint8_t> & p_m
 						--data_count;
                         p_midi_file.push_back( 0xF0 );
 						encode_delta( p_midi_file, data_count );
-                        data.resize( data_count );
-                        event.copy_data( &data[0], 1, data_count );
-                        p_midi_file.insert( p_midi_file.end(), data.begin(), data.begin() + data_count );
+						if ( data_count )
+						{
+							data.resize( data_count );
+							event.copy_data( &data[0], 1, data_count );
+							p_midi_file.insert( p_midi_file.end(), data.begin(), data.begin() + data_count );
+						}
 					}
 					else if ( event.m_data[ 0 ] == 0xFF && data_count >= 2 )
 					{
@@ -696,9 +699,12 @@ void midi_container::serialize_as_standard_midi_file( std::vector<uint8_t> & p_m
                         p_midi_file.push_back( 0xFF );
                         p_midi_file.push_back( event.m_data[ 1 ] );
 						encode_delta( p_midi_file, data_count );
-                        data.resize( data_count );
-                        event.copy_data( &data[0], 2, data_count );
-                        p_midi_file.insert( p_midi_file.end(), data.begin(), data.begin() + data_count );
+						if ( data_count )
+						{
+							data.resize( data_count );
+							event.copy_data( &data[0], 2, data_count );
+							p_midi_file.insert( p_midi_file.end(), data.begin(), data.begin() + data_count );
+						}
 					}
 				}
 			}
