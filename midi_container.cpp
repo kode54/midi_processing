@@ -50,7 +50,7 @@ void midi_event::copy_data( uint8_t * p_out, unsigned p_offset, unsigned p_count
 		p_count -= count;
 		p_out += count;
 	}
-    memcpy( p_out, &m_ext_data[0], p_count );
+    if ( p_count ) memcpy( p_out, &m_ext_data[0], p_count );
 }
 
 midi_track::midi_track(const midi_track & p_in)
