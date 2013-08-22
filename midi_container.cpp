@@ -95,6 +95,11 @@ const midi_event & midi_track::operator [] ( std::size_t p_index ) const
 	return m_events[ p_index ];
 }
 
+void midi_track::remove_event( unsigned index )
+{
+    m_events.erase( m_events.begin() + index );
+}
+
 tempo_entry::tempo_entry(unsigned p_timestamp, unsigned p_tempo)
 {
 	m_timestamp = p_timestamp;
@@ -461,6 +466,50 @@ void midi_container::set_track_count( unsigned count )
 void midi_container::set_extra_meta_data( const midi_meta_data & p_data )
 {
 	m_extra_meta_data = p_data;
+}
+
+void midi_container::apply_hackfix( unsigned hack )
+{
+    switch (hack)
+    {
+        case 0:
+            for (unsigned i = 0; i < m_tracks.size(); ++i)
+            {
+                midi_track & t = m_tracks[ i ];
+                for ( unsigned i = 0; i < t.get_count(); )
+                {
+                    if ( t[ i ].m_type != midi_event::extended &&
+                        t[ i ].m_channel == 16 )
+                    {
+                        t.remove_event( i );
+                    }
+                    else
+                    {
+                        ++i;
+                    }
+                }
+            }
+            break;
+            
+        case 1:
+            for (unsigned i = 0; i < m_tracks.size(); ++i)
+            {
+                midi_track & t = m_tracks[ i ];
+                for ( unsigned i = 0; i < t.get_count(); )
+                {
+                    if ( t[ i ].m_type != midi_event::extended &&
+                        ( t[ i ].m_channel - 10 < 6 ) )
+                    {
+                        t.remove_event( i );
+                    }
+                    else
+                    {
+                        ++i;
+                    }
+                }
+            }
+            break;
+    }
 }
 
 void midi_container::serialize_as_stream( unsigned subsong, std::vector<midi_stream_event> & p_stream, system_exclusive_table & p_system_exclusive, unsigned clean_flags ) const

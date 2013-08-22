@@ -51,6 +51,8 @@ public:
 	void add_event( const midi_event & p_event );
     std::size_t get_count() const;
     const midi_event & operator [] ( std::size_t p_index ) const;
+    
+    void remove_event( unsigned index );
 };
 
 struct tempo_entry
@@ -206,6 +208,13 @@ public:
     void merge_tracks( const midi_container & p_source );
     void set_track_count( unsigned count );
     void set_extra_meta_data( const midi_meta_data & p_data );
+    
+    /*
+     * Blah.
+     * Hack 0: Remove channel 16
+     * Hack 1: Remove channels 11-16
+     */
+    void apply_hackfix( unsigned hack );
 
     void serialize_as_stream( unsigned subsong, std::vector<midi_stream_event> & p_stream, system_exclusive_table & p_system_exclusive, unsigned clean_flags ) const;
 
