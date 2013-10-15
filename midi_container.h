@@ -24,20 +24,20 @@ struct midi_event
 		extended
 	};
 
-	unsigned m_timestamp;
+	unsigned long m_timestamp;
 
 	event_type m_type;
 	unsigned m_channel;
-	unsigned m_data_count;
+	unsigned long m_data_count;
     uint8_t m_data[max_static_data_count];
     std::vector<uint8_t> m_ext_data;
 
 	midi_event() : m_timestamp(0), m_type(note_off), m_channel(0), m_data_count(0) { }
 	midi_event( const midi_event & p_in );
-    midi_event( unsigned p_timestamp, event_type p_type, unsigned p_channel, const uint8_t * p_data, std::size_t p_data_count );
+    midi_event( unsigned long p_timestamp, event_type p_type, unsigned p_channel, const uint8_t * p_data, std::size_t p_data_count );
 
-	unsigned get_data_count() const;
-    void copy_data( uint8_t * p_out, unsigned p_offset, unsigned p_count ) const;
+	unsigned long get_data_count() const;
+    void copy_data( uint8_t * p_out, unsigned long p_offset, unsigned long p_count ) const;
 };
 
 class midi_track
@@ -52,16 +52,16 @@ public:
     std::size_t get_count() const;
     const midi_event & operator [] ( std::size_t p_index ) const;
     
-    void remove_event( unsigned index );
+    void remove_event( unsigned long index );
 };
 
 struct tempo_entry
 {
-	unsigned m_timestamp;
+	unsigned long m_timestamp;
 	unsigned m_tempo;
 
 	tempo_entry() : m_timestamp(0), m_tempo(0) { }
-	tempo_entry(unsigned p_timestamp, unsigned p_tempo);
+	tempo_entry(unsigned long p_timestamp, unsigned p_tempo);
 };
 
 class tempo_map
@@ -69,8 +69,8 @@ class tempo_map
     std::vector<tempo_entry> m_entries;
 
 public:
-	void add_tempo( unsigned p_tempo, unsigned p_timestamp );
-    unsigned timestamp_to_ms( unsigned p_timestamp, unsigned p_dtx ) const;
+	void add_tempo( unsigned p_tempo, unsigned long p_timestamp );
+    unsigned long timestamp_to_ms( unsigned long p_timestamp, unsigned p_dtx ) const;
 
     std::size_t get_count() const;
     const tempo_entry & operator [] ( std::size_t p_index ) const;
@@ -98,22 +98,22 @@ public:
 
 struct midi_stream_event
 {
-	unsigned m_timestamp;
-	unsigned m_event;
+	unsigned long m_timestamp;
+	uint32_t m_event;
 
 	midi_stream_event() : m_timestamp(0), m_event(0) { }
-	midi_stream_event(unsigned p_timestamp, unsigned p_event);
+	midi_stream_event(unsigned long p_timestamp, uint32_t p_event);
 };
 
 struct midi_meta_data_item
 {
-	unsigned m_timestamp;
+	unsigned long m_timestamp;
     std::string m_name;
     std::string m_value;
 
 	midi_meta_data_item() : m_timestamp(0) { }
 	midi_meta_data_item(const midi_meta_data_item & p_in);
-	midi_meta_data_item(unsigned p_timestamp, const char * p_name, const char * p_value);
+	midi_meta_data_item(unsigned long p_timestamp, const char * p_name, const char * p_value);
 };
 
 class midi_meta_data
@@ -157,12 +157,12 @@ private:
 
 	midi_meta_data m_extra_meta_data;
 
-    std::vector<unsigned> m_timestamp_end;
+    std::vector<unsigned long> m_timestamp_end;
 
-    std::vector<unsigned> m_timestamp_loop_start;
-    std::vector<unsigned> m_timestamp_loop_end;
+    std::vector<unsigned long> m_timestamp_loop_start;
+    std::vector<unsigned long> m_timestamp_loop_end;
 
-    unsigned timestamp_to_ms( unsigned p_timestamp, unsigned p_subsong ) const;
+    unsigned long timestamp_to_ms( unsigned long p_timestamp, unsigned long p_subsong ) const;
 
     /*
      * Normalize port numbers properly
@@ -216,29 +216,29 @@ public:
      */
     void apply_hackfix( unsigned hack );
 
-    void serialize_as_stream( unsigned subsong, std::vector<midi_stream_event> & p_stream, system_exclusive_table & p_system_exclusive, unsigned clean_flags ) const;
+    void serialize_as_stream( unsigned long subsong, std::vector<midi_stream_event> & p_stream, system_exclusive_table & p_system_exclusive, unsigned long & loop_start, unsigned long & loop_end, unsigned clean_flags ) const;
 
     void serialize_as_standard_midi_file( std::vector<uint8_t> & p_midi_file ) const;
 
     void promote_to_type1();
 
-    unsigned get_subsong_count() const;
-    unsigned get_subsong( unsigned p_index ) const;
+    unsigned long get_subsong_count() const;
+    unsigned long get_subsong( unsigned long p_index ) const;
 
-    unsigned get_timestamp_end(unsigned subsong, bool ms = false) const;
+    unsigned long get_timestamp_end(unsigned long subsong, bool ms = false) const;
 
     unsigned get_format() const;
     unsigned get_track_count() const;
-    unsigned get_channel_count(unsigned subsong) const;
+    unsigned get_channel_count(unsigned long subsong) const;
 
-    unsigned get_timestamp_loop_start(unsigned subsong, bool ms = false) const;
-    unsigned get_timestamp_loop_end(unsigned subsong, bool ms = false) const;
+    unsigned long get_timestamp_loop_start(unsigned long subsong, bool ms = false) const;
+    unsigned long get_timestamp_loop_end(unsigned long subsong, bool ms = false) const;
 
-	void get_meta_data( unsigned subsong, midi_meta_data & p_out );
+	void get_meta_data( unsigned long subsong, midi_meta_data & p_out );
 
 	void scan_for_loops( bool p_xmi_loops, bool p_marker_loops );
 
-    static void encode_delta( std::vector<uint8_t> & p_out, unsigned delta );
+    static void encode_delta( std::vector<uint8_t> & p_out, unsigned long delta );
 };
 
 #endif

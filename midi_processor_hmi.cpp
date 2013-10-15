@@ -41,7 +41,7 @@ bool midi_processor::process_hmi( std::vector<uint8_t> const& p_file, midi_conta
 	for ( unsigned i = 0; i < track_count; ++i )
 	{
 		unsigned track_offset = track_offsets[ i ];
-		unsigned track_length;
+		unsigned long track_length;
 		if ( i + 1 < track_count )
 		{
 			track_length = track_offsets[ i + 1 ] - track_offset;

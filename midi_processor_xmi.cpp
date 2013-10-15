@@ -108,7 +108,7 @@ static bool read_iff_chunk( std::vector<uint8_t>::const_iterator & it, std::vect
 	bool is_cat_chunk = !memcmp( p_out.m_id, "CAT ", 4 );
 	bool is_form_chunk = !memcmp( p_out.m_id, "FORM", 4 );
     std::size_t chunk_size_limit = end - it;
-	if ( chunk_size > chunk_size_limit ) chunk_size = chunk_size_limit;
+	if ( chunk_size > chunk_size_limit ) chunk_size = (uint32_t) chunk_size_limit;
 	if ( ( first_chunk && is_form_chunk ) || ( !first_chunk && is_cat_chunk ) )
 	{
         std::vector<uint8_t>::const_iterator chunk_end = it + chunk_size;

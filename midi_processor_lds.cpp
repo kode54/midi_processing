@@ -1013,7 +1013,7 @@ bool midi_processor::process_lds( std::vector<uint8_t> const& p_file, midi_conta
 	for ( unsigned i = 0; i < 9; ++i )
 	{
 		midi_track & track = tracks[ i ];
-		unsigned count = track.get_count();
+		unsigned long count = track.get_count();
 		if ( count > 1 )
 		{
 			if ( last_note[ i ] != 0xFF )
