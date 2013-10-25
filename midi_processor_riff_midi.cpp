@@ -56,9 +56,11 @@ bool midi_processor::process_riff_midi( std::vector<uint8_t> const& p_file, midi
 
     std::vector<uint8_t> extra_buffer;
 
-    while ( it < body_end )
+    while ( it != body_end )
 	{
+		if ( body_end - it < 8 ) return false;
         uint32_t chunk_size = it[ 4 ] | ( it[ 5 ] << 8 ) | ( it[ 6 ] << 16 ) | ( it[ 7 ] << 24 );
+		if ( (unsigned long)(body_end - it) < chunk_size ) return false;
         if ( it[ 0 ] == 'd' && it[ 1 ] == 'a' && it[ 2 ] == 't' && it[ 3 ] == 'a' )
 		{
 			if ( !found_data )
@@ -70,7 +72,7 @@ bool midi_processor::process_riff_midi( std::vector<uint8_t> const& p_file, midi
             }
             else return false; /*throw exception_io_data( "Multiple RIFF data chunks found" );*/
             it += 8 + chunk_size;
-            if ( chunk_size & 1 && it < body_end ) ++it;
+            if ( chunk_size & 1 && it != body_end ) ++it;
 		}
         else if ( it[ 0 ] == 'D' && it[ 1 ] == 'I' && it[ 2 ] == 'S' && it[ 3 ] == 'P' )
 		{
@@ -82,7 +84,7 @@ bool midi_processor::process_riff_midi( std::vector<uint8_t> const& p_file, midi
                 meta_data.add_item( midi_meta_data_item( 0, "display_name", (const char *) &extra_buffer[0] ) );
 			}
             it += 8 + chunk_size;
-            if ( chunk_size & 1 && it < body_end ) ++it;
+            if ( chunk_size & 1 && it != body_end ) ++it;
 		}
         else if ( it[ 0 ] == 'L' && it[ 1 ] == 'I' && it[ 2 ] == 'S' && it[ 3 ] == 'T' )
 		{
@@ -91,10 +93,13 @@ bool midi_processor::process_riff_midi( std::vector<uint8_t> const& p_file, midi
 			{
 				if ( !found_info )
 				{
+					if ( chunk_end - it < 12 ) return false;
                     it += 12;
-                    while ( it < chunk_end )
+                    while ( it != chunk_end )
 					{
+						if ( chunk_end - it < 4 ) return false;
                         uint32_t field_size = it[ 4 ] | ( it[ 5 ] << 8 ) | ( it[ 6 ] << 16 ) | ( it[ 7 ] << 24 );
+						if ( (unsigned long)(chunk_end - it) < 8 + field_size ) return false;
                         std::string field;
                         field.assign( it, it + 4 );
 						for ( unsigned i = 0; i < _countof(riff_tag_mappings); ++i )
@@ -109,7 +114,7 @@ bool midi_processor::process_riff_midi( std::vector<uint8_t> const& p_file, midi
                         std::copy( it + 8, it + 8 + field_size, extra_buffer.begin() );
                         it += 8 + field_size;
                         meta_data.add_item( midi_meta_data_item( 0, field.c_str(), ( const char * ) &extra_buffer[0] ) );
-                        if ( field_size & 1 && it < chunk_end ) ++it;
+                        if ( field_size & 1 && it != chunk_end ) ++it;
 					}
 					found_info = true;
 				}
@@ -117,12 +122,12 @@ bool midi_processor::process_riff_midi( std::vector<uint8_t> const& p_file, midi
 			}
             else return false; /* unknown LIST chunk */
             it = chunk_end;
-            if ( chunk_size & 1 && it < body_end ) ++it;
+            if ( chunk_size & 1 && it != body_end ) ++it;
         }
         else
         {
             it += chunk_size;
-            if ( chunk_size & 1 && it < body_end ) ++it;
+            if ( chunk_size & 1 && it != body_end ) ++it;
         }
 
 		if ( found_data && found_info ) break;
