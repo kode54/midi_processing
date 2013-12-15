@@ -119,7 +119,8 @@ struct midi_meta_data_item
 class midi_meta_data
 {
     std::vector<midi_meta_data_item> m_data;
-
+    std::vector<uint8_t> m_bitmap;
+    
 public:
 	midi_meta_data() { }
 
@@ -129,6 +130,10 @@ public:
 	
 	bool get_item( const char * p_name, midi_meta_data_item & p_out ) const;
 
+    bool get_bitmap( std::vector<uint8_t> & p_out );
+    
+    void assign_bitmap( std::vector<uint8_t>::const_iterator const& begin, std::vector<uint8_t>::const_iterator const& end );
+    
     std::size_t get_count() const;
 
     const midi_meta_data_item & operator [] ( std::size_t p_index ) const;
@@ -236,7 +241,7 @@ public:
 
 	void get_meta_data( unsigned long subsong, midi_meta_data & p_out );
 
-	void scan_for_loops( bool p_xmi_loops, bool p_marker_loops );
+	void scan_for_loops( bool p_xmi_loops, bool p_marker_loops, bool p_rpgmaker_loops );
 
     static void encode_delta( std::vector<uint8_t> & p_out, unsigned long delta );
 };

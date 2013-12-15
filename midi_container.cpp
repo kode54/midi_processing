@@ -225,6 +225,7 @@ void midi_meta_data::add_item( const midi_meta_data_item & p_item )
 void midi_meta_data::append( const midi_meta_data & p_data )
 {
     m_data.insert( m_data.end(), p_data.m_data.begin(), p_data.m_data.end() );
+    m_bitmap = p_data.m_bitmap;
 }
 
 bool midi_meta_data::get_item( const char * p_name, midi_meta_data_item & p_out ) const
@@ -239,6 +240,17 @@ bool midi_meta_data::get_item( const char * p_name, midi_meta_data_item & p_out 
 		}
 	}
 	return false;
+}
+
+bool midi_meta_data::get_bitmap( std::vector<uint8_t> & p_out )
+{
+    p_out = m_bitmap;
+    return p_out.size() != 0;
+}
+
+void midi_meta_data::assign_bitmap( std::vector<uint8_t>::const_iterator const& begin, std::vector<uint8_t>::const_iterator const& end )
+{
+    m_bitmap.assign( begin, end );
 }
 
 std::size_t midi_meta_data::get_count() const
@@ -543,23 +555,12 @@ void midi_container::serialize_as_stream( unsigned long subsong, std::vector<mid
 			{
 				const midi_event & event = track[ j ];
 				if ( event.m_type == midi_event::control_change &&
-					( event.m_data[ 0 ] == 110 || event.m_data[ 0 ] == 111 ) )
+				     event.m_data[ 0 ] == 110 )
 				{
-					if ( event.m_data[ 0 ] == 110 )
+					if ( event.m_data[ 1 ] != 0 && event.m_data[ 1 ] != 1 && event.m_data[ 1 ] != 127 )
 					{
-						if ( event.m_data[ 1 ] != 0 && event.m_data[ 1 ] != 1 && event.m_data[ 1 ] != 127 )
-						{
-							skip_track = true;
-							break;
-						}
-					}
-					else
-					{
-						if ( event.m_data[ 1 ] == 0 || event.m_data[ 1 ] == 1 )
-						{
-							skip_track = true;
-							break;
-						}
+						skip_track = true;
+						break;
 					}
 				}
 			}
@@ -1029,7 +1030,7 @@ void midi_container::get_meta_data( unsigned long subsong, midi_meta_data & p_ou
 	p_out.append( m_extra_meta_data );
 }
 
-void midi_container::scan_for_loops( bool p_xmi_loops, bool p_marker_loops )
+void midi_container::scan_for_loops( bool p_xmi_loops, bool p_marker_loops, bool p_rpgmaker_loops )
 {
     std::vector<uint8_t> data;
 
@@ -1044,6 +1045,54 @@ void midi_container::scan_for_loops( bool p_xmi_loops, bool p_marker_loops )
         m_timestamp_loop_end[ i ] = ~0UL;
 	}
 
+	if ( p_rpgmaker_loops )
+	{
+        bool emidi_commands_found = false;
+        
+        for ( unsigned long i = 0; i < m_tracks.size(); ++i )
+		{
+			unsigned long subsong = 0;
+			if ( m_form == 2 ) subsong = i;
+            
+			const midi_track & track = m_tracks[ i ];
+			for ( unsigned long j = 0; j < track.get_count(); ++j )
+			{
+				const midi_event & event = track[ j ];
+				if ( event.m_type == midi_event::control_change &&
+					( event.m_data[ 0 ] == 110 || event.m_data[ 0 ] == 111 ) )
+				{
+                    if ( event.m_data[ 0 ] == 110 ||
+                        ( event.m_data[ 0 ] == 111 && event.m_data[ 1 ] > 1 ) )
+                    {
+                        emidi_commands_found = true;
+                        break;
+                    }
+					if ( event.m_data[ 1 ] == 0 )
+					{
+                        if ( m_timestamp_loop_start[ subsong ] == ~0UL || m_timestamp_loop_start[ subsong ] > event.m_timestamp )
+						{
+							m_timestamp_loop_start[ subsong ] = event.m_timestamp;
+						}
+					}
+					else
+					{
+                        if ( m_timestamp_loop_end[ subsong ] == ~0UL || m_timestamp_loop_end[ subsong ] < event.m_timestamp )
+						{
+							m_timestamp_loop_end[ subsong ] = event.m_timestamp;
+						}
+					}
+				}
+			}
+            
+            if ( emidi_commands_found )
+            {
+                m_timestamp_loop_start[ subsong ] = ~0UL;
+                m_timestamp_loop_end[ subsong ] = ~0UL;
+                break;
+            }
+		}
+	}
+    
 	if ( p_xmi_loops )
 	{
         for ( unsigned long i = 0; i < m_tracks.size(); ++i )
@@ -1060,14 +1109,14 @@ void midi_container::scan_for_loops( bool p_xmi_loops, bool p_marker_loops )
 				{
 					if ( event.m_data[ 0 ] == 0x74 )
 					{
-                        if ( m_timestamp_loop_start[ subsong ] == ~0u || m_timestamp_loop_start[ subsong ] > event.m_timestamp )
+                        if ( m_timestamp_loop_start[ subsong ] == ~0UL || m_timestamp_loop_start[ subsong ] > event.m_timestamp )
 						{
 							m_timestamp_loop_start[ subsong ] = event.m_timestamp;
 						}
 					}
 					else
 					{
-                        if ( m_timestamp_loop_end[ subsong ] == ~0u || m_timestamp_loop_end[ subsong ] < event.m_timestamp )
+                        if ( m_timestamp_loop_end[ subsong ] == ~0UL || m_timestamp_loop_end[ subsong ] < event.m_timestamp )
 						{
 							m_timestamp_loop_end[ subsong ] = event.m_timestamp;
 						}
@@ -1098,14 +1147,14 @@ void midi_container::scan_for_loops( bool p_xmi_loops, bool p_marker_loops )
 
                     if ( data_count == 9 && !strncasecmp( (const char *) &data[0], "loopStart", 9 ) )
 					{
-                        if ( m_timestamp_loop_start[ subsong ] == ~0u || m_timestamp_loop_start[ subsong ] > event.m_timestamp )
+                        if ( m_timestamp_loop_start[ subsong ] == ~0UL || m_timestamp_loop_start[ subsong ] > event.m_timestamp )
 						{
 							m_timestamp_loop_start[ subsong ] = event.m_timestamp;
 						}
 					}
                     else if ( data_count == 7 && !strncasecmp( (const char *) &data[0], "loopEnd", 7 ) )
 					{
-                        if ( m_timestamp_loop_end[ subsong ] == ~0u || m_timestamp_loop_end[ subsong ] < event.m_timestamp )
+                        if ( m_timestamp_loop_end[ subsong ] == ~0UL || m_timestamp_loop_end[ subsong ] < event.m_timestamp )
 						{
 							m_timestamp_loop_end[ subsong ] = event.m_timestamp;
 						}
