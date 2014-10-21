@@ -351,6 +351,7 @@ bool midi_processor::process_lds( std::vector<uint8_t> const& p_file, midi_conta
 
 	if ( end - it < 2 ) return false;
     patch_count = it[ 0 ] | ( it[ 1 ] << 8 );
+	if ( !patch_count ) return false;
     it += 2;
     patches.resize( patch_count );
 	if ( end - it < 46 * patch_count ) return false;
@@ -404,6 +405,7 @@ bool midi_processor::process_lds( std::vector<uint8_t> const& p_file, midi_conta
 
 	if ( end - it < 2 ) return false;
     position_count = it[ 0 ] | ( it[ 1 ] << 8 );
+	if ( !position_count ) return false;
     it += 2;
     positions.resize( 9 * position_count );
 	if ( end - it < 3 * position_count ) return false;
