@@ -43,8 +43,8 @@ void midi_event::copy_data( uint8_t * p_out, unsigned long p_offset, unsigned lo
     p_count = std::min( p_count, max_count );
 	if ( p_offset < max_static_data_count )
 	{
-		unsigned long max_count = max_static_data_count - p_offset;
-        unsigned long count = std::min( max_count, p_count );
+		unsigned long _max_count = max_static_data_count - p_offset;
+        unsigned long count = std::min( _max_count, p_count );
 		memcpy( p_out, m_data + p_offset, count );
 		p_offset -= count;
 		p_count -= count;
@@ -388,16 +388,16 @@ void midi_container::add_track( const midi_track & p_track )
 			unsigned channel = event.m_channel;
 			if ( device_name.length() )
 			{
-				unsigned long i, j;
-                for ( i = 0, j = m_device_names[ channel ].size(); i < j; ++i )
+				unsigned long j, k;
+                for ( j = 0, k = m_device_names[ channel ].size(); j < k; ++j )
 				{
-                    if ( !strcmp( m_device_names[ channel ][ i ].c_str(), device_name.c_str() ) ) break;
+                    if ( !strcmp( m_device_names[ channel ][ j ].c_str(), device_name.c_str() ) ) break;
 				}
-				if ( i < j ) port_number = i;
+				if ( j < k ) port_number = j;
 				else
 				{
                     m_device_names[ channel ].push_back( device_name );
-					port_number = j;
+					port_number = k;
 				}
                 device_name.clear();
                 limit_port_number( port_number );
@@ -405,11 +405,11 @@ void midi_container::add_track( const midi_track & p_track )
 
 			channel += 16 * port_number;
 			channel %= 48;
-			if ( m_form != 2 ) m_channel_mask[ 0 ] |= 1 << channel;
+			if ( m_form != 2 ) m_channel_mask[ 0 ] |= 1ULL << channel;
 			else
 			{
                 m_channel_mask.resize( m_tracks.size(), 0 );
-                m_channel_mask[ m_tracks.size() - 1 ] |= 1 << channel;
+                m_channel_mask[ m_tracks.size() - 1 ] |= 1ULL << channel;
 			}
 		}
 	}
@@ -444,11 +444,11 @@ void midi_container::add_track_event( std::size_t p_track_index, const midi_even
 	}
 	else if ( p_event.m_type == midi_event::note_on || p_event.m_type == midi_event::note_off )
 	{
-		if ( m_form != 2 ) m_channel_mask[ 0 ] |= 1 << p_event.m_channel;
+		if ( m_form != 2 ) m_channel_mask[ 0 ] |= 1ULL << p_event.m_channel;
 		else
 		{
             m_channel_mask.resize( m_tracks.size(), 0 );
-			m_channel_mask[ p_track_index ] |= 1 << p_event.m_channel;
+			m_channel_mask[ p_track_index ] |= 1ULL << p_event.m_channel;
 		}
 	}
 
@@ -488,16 +488,16 @@ void midi_container::apply_hackfix( unsigned hack )
             for (unsigned i = 0; i < m_tracks.size(); ++i)
             {
                 midi_track & t = m_tracks[ i ];
-                for ( unsigned i = 0; i < t.get_count(); )
+                for ( unsigned j = 0; j < t.get_count(); )
                 {
-                    if ( t[ i ].m_type != midi_event::extended &&
-                        t[ i ].m_channel == 16 )
+                    if ( t[ j ].m_type != midi_event::extended &&
+                        t[ j ].m_channel == 16 )
                     {
-                        t.remove_event( i );
+                        t.remove_event( j );
                     }
                     else
                     {
-                        ++i;
+                        ++j;
                     }
                 }
             }
@@ -507,16 +507,16 @@ void midi_container::apply_hackfix( unsigned hack )
             for (unsigned i = 0; i < m_tracks.size(); ++i)
             {
                 midi_track & t = m_tracks[ i ];
-                for ( unsigned i = 0; i < t.get_count(); )
+                for ( unsigned j = 0; j < t.get_count(); )
                 {
-                    if ( t[ i ].m_type != midi_event::extended &&
-                        ( t[ i ].m_channel - 10 < 6 ) )
+                    if ( t[ j ].m_type != midi_event::extended &&
+                        ( t[ j ].m_channel - 10 < 6 ) )
                     {
-                        t.remove_event( i );
+                        t.remove_event( j );
                     }
                     else
                     {
-                        ++i;
+                        ++j;
                     }
                 }
             }
@@ -626,7 +626,7 @@ void midi_container::serialize_as_stream( unsigned long subsong, std::vector<mid
 					{
                         if ( !strcmp( m_device_names[ event.m_channel ][ i ].c_str(), device_names[ next_track ].c_str() ) ) break;
 					}
-					port_numbers[ next_track ] = i;
+					port_numbers[ next_track ] = (uint8_t) i;
                     device_names[ next_track ].clear();
                     limit_port_number( port_numbers[ next_track ] );
 				}
@@ -649,7 +649,7 @@ void midi_container::serialize_as_stream( unsigned long subsong, std::vector<mid
 						{
                             if ( !strcmp( m_device_names[ event.m_channel ][ i ].c_str(), device_names[ next_track ].c_str() ) ) break;
 						}
-						port_numbers[ next_track ] = i;
+						port_numbers[ next_track ] = (uint8_t) i;
                         device_names[ next_track ].clear();
                         limit_port_number( port_numbers[ next_track ] );
 					}
@@ -666,11 +666,11 @@ void midi_container::serialize_as_stream( unsigned long subsong, std::vector<mid
 				{
                     if ( event.m_data[ 1 ] == 4 || event.m_data[ 1 ] == 9 )
 					{
-						unsigned long data_count = event.get_data_count() - 2;
-                        data.resize( data_count );
-                        event.copy_data( &data[0], 2, data_count );
+						unsigned long _data_count = event.get_data_count() - 2;
+                        data.resize( _data_count );
+                        event.copy_data( &data[0], 2, _data_count );
                         device_names[ next_track ].clear();
-                        device_names[ next_track ].assign( data.begin(), data.begin() + data_count );
+                        device_names[ next_track ].assign( data.begin(), data.begin() + _data_count );
                         std::transform( device_names[ next_track ].begin(), device_names[ next_track ].end(), device_names[ next_track ].begin(), ::tolower );
 					}
 					else if ( event.m_data[ 1 ] == 0x21 )
@@ -704,8 +704,8 @@ void midi_container::serialize_as_standard_midi_file( std::vector<uint8_t> & p_m
     p_midi_file.push_back( 6 );
     p_midi_file.push_back( 0 );
     p_midi_file.push_back( m_form );
-    p_midi_file.push_back( (m_tracks.size() >> 8) );
-    p_midi_file.push_back( m_tracks.size() );
+    p_midi_file.push_back( (uint8_t) (m_tracks.size() >> 8) );
+    p_midi_file.push_back( (uint8_t) m_tracks.size() );
     p_midi_file.push_back( (m_dtx >> 8) );
     p_midi_file.push_back( m_dtx );
 
@@ -716,8 +716,8 @@ void midi_container::serialize_as_standard_midi_file( std::vector<uint8_t> & p_m
 		unsigned char last_event_code = 0xFF;
         std::size_t length_offset;
 
-        const char signature[] = "MTrk";
-        p_midi_file.insert( p_midi_file.end(), signature, signature + 4 );
+        const char _signature[] = "MTrk";
+        p_midi_file.insert( p_midi_file.end(), _signature, _signature + 4 );
 
         length_offset = p_midi_file.size();
         p_midi_file.push_back( 0 );
