@@ -680,6 +680,24 @@ void midi_container::serialize_as_stream( unsigned long subsong, std::vector<mid
                         limit_port_number( port_numbers[ next_track ] );
 					}
 				}
+				else if ( data_count == 1 && event.m_data[ 0 ] >= 0xF8 )
+				{
+					if ( device_names[ next_track ].length() )
+					{
+						unsigned long i, j;
+						for ( i = 0, j = m_device_names[ event.m_channel ].size(); i < j; ++i )
+						{
+							if ( !strcmp( m_device_names[ event.m_channel ][ i ].c_str(), device_names[ next_track ].c_str() ) ) break;
+						}
+						port_numbers[ next_track ] = (uint8_t) i;
+						device_names[ next_track ].clear();
+						limit_port_number( port_numbers[ next_track ] );
+					}
+
+					uint32_t event_code = port_numbers[ next_track ] << 24;
+					event_code += event.m_data[ 0 ];
+					p_stream.push_back( midi_stream_event( timestamp_ms, event_code ) );
+				}
 			}
 		}
 
@@ -769,6 +787,12 @@ void midi_container::serialize_as_standard_midi_file( std::vector<uint8_t> & p_m
 							event.copy_data( &data[0], 2, data_count );
 							p_midi_file.insert( p_midi_file.end(), data.begin(), data.begin() + data_count );
 						}
+					}
+					else
+					{
+						data.resize( data_count );
+						event.copy_data( &data[0], 1, data_count );
+						p_midi_file.insert( p_midi_file.end(), data.begin(), data.begin() + data_count );
 					}
 				}
 			}
