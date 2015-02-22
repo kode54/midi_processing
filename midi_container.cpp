@@ -1192,7 +1192,21 @@ void midi_container::scan_for_loops( bool p_xmi_loops, bool p_marker_loops, bool
 
 	for ( unsigned long i = 0; i < subsong_count; ++i )
 	{
-        if ( m_timestamp_loop_start[ i ] != ~0UL && m_timestamp_loop_start[ i ] == m_timestamp_loop_end[ i ] )
+		unsigned long timestamp_song_end;
+		if ( m_form == 2 )
+			timestamp_song_end = m_tracks[i][m_tracks[i].get_count()-1].m_timestamp;
+		else
+		{
+			timestamp_song_end = 0;
+			for (unsigned long j = 0; j < m_tracks.size(); ++j)
+			{
+				const midi_track & track = m_tracks[j];
+				unsigned long timestamp = track[track.get_count()-1].m_timestamp;
+				if (timestamp > timestamp_song_end)
+					timestamp_song_end = timestamp;
+			}
+		}
+        if ( m_timestamp_loop_start[ i ] != ~0UL && ( ( m_timestamp_loop_start[ i ] == m_timestamp_loop_end[ i ] ) || ( m_timestamp_loop_start[ i ] == timestamp_song_end ) ) )
 		{
             m_timestamp_loop_start[ i ] = ~0UL;
             m_timestamp_loop_end[ i ] = ~0UL;
