@@ -95,6 +95,11 @@ const midi_event & midi_track::operator [] ( std::size_t p_index ) const
 	return m_events[ p_index ];
 }
 
+midi_event & midi_track::operator [] ( std::size_t p_index )
+{
+	return m_events[ p_index ];
+}
+
 void midi_track::remove_event( unsigned long index )
 {
     m_events.erase( m_events.begin() + index );
@@ -157,6 +162,11 @@ std::size_t tempo_map::get_count() const
 }
 
 const tempo_entry & tempo_map::operator [] ( std::size_t p_index ) const
+{
+	return m_entries[ p_index ];
+}
+
+tempo_entry & tempo_map::operator [] ( std::size_t p_index )
 {
 	return m_entries[ p_index ];
 }
@@ -1052,6 +1062,111 @@ void midi_container::get_meta_data( unsigned long subsong, midi_meta_data & p_ou
 	}
 
 	p_out.append( m_extra_meta_data );
+}
+
+void midi_container::trim_tempo_map( unsigned long p_index, unsigned long base_timestamp )
+{
+	tempo_map & map = m_tempo_map[ p_index ];
+
+	for ( unsigned long i = 0, j = map.get_count(); i < j; ++i )
+	{
+		tempo_entry & entry = map[ i ];
+		if ( entry.m_timestamp >= base_timestamp )
+			entry.m_timestamp -= base_timestamp;
+		else
+			entry.m_timestamp = 0;
+	}
+}
+
+void midi_container::trim_range_of_tracks(unsigned long start, unsigned long end)
+{
+	unsigned long timestamp_first_note = ~0UL;
+
+	for (unsigned long i = start; i <= end; ++i)
+	{
+		unsigned long j, k;
+
+		const midi_track & track = m_tracks[ i ];
+
+		for (j = 0, k = track.get_count(); j < k; ++j)
+		{
+			const midi_event & event = track[ j ];
+
+			if ( event.m_type == midi_event::note_on && event.m_data[ 0 ] )
+				break;
+		}
+
+		if ( j < k )
+		{
+			if ( track[ j ].m_timestamp < timestamp_first_note )
+				timestamp_first_note = track[ j ].m_timestamp;
+		}
+	}
+
+	if ( timestamp_first_note < ~0UL && timestamp_first_note > 0 )
+	{
+		for (unsigned long i = start; i <= end; ++i)
+		{
+			midi_track & track = m_tracks[ i ];
+
+			for (unsigned long j = 0, k = track.get_count(); j < k; ++j)
+			{
+				midi_event & event = track[ j ];
+				if ( event.m_timestamp >= timestamp_first_note )
+					event.m_timestamp -= timestamp_first_note;
+				else
+					event.m_timestamp = 0;
+			}
+		}
+
+		if ( start == end )
+		{
+			trim_tempo_map( start, timestamp_first_note );
+
+			m_timestamp_end[ start ] -= timestamp_first_note;
+
+			if ( m_timestamp_loop_end[ start ] != ~0UL )
+				m_timestamp_loop_end[ start ] -= timestamp_first_note;
+			if ( m_timestamp_loop_start[ start ] != ~0UL )
+			{
+				if ( m_timestamp_loop_start[ start ] > timestamp_first_note )
+					m_timestamp_loop_start[ start ] -= timestamp_first_note;
+				else
+					m_timestamp_loop_start[ start ] = 0;
+			}
+		}
+		else
+		{
+			trim_tempo_map( 0, timestamp_first_note );
+
+			m_timestamp_end[ 0 ] -= timestamp_first_note;
+
+			if ( m_timestamp_loop_end[ 0 ] != ~0UL )
+				m_timestamp_loop_end[ 0 ] -= timestamp_first_note;
+			if ( m_timestamp_loop_start[ 0 ] != ~0UL )
+			{
+				if ( m_timestamp_loop_start[ 0 ] > timestamp_first_note )
+					m_timestamp_loop_start[ 0 ] -= timestamp_first_note;
+				else
+					m_timestamp_loop_start[ 0 ] = 0;
+			}
+		}
+	}
+}
+
+void midi_container::trim_start()
+{
+	if (m_form == 2)
+	{
+		for (unsigned long i = 0, j = m_tracks.size(); i < j; ++i)
+		{
+			trim_range_of_tracks(i, i);
+		}
+	}
+	else
+	{
+		trim_range_of_tracks(0, m_tracks.size() - 1);
+	}
 }
 
 void midi_container::scan_for_loops( bool p_xmi_loops, bool p_marker_loops, bool p_rpgmaker_loops )

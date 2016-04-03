@@ -57,6 +57,7 @@ public:
 	void add_event( const midi_event & p_event );
     std::size_t get_count() const;
     const midi_event & operator [] ( std::size_t p_index ) const;
+	midi_event & operator [] ( std::size_t p_index );
     
     void remove_event( unsigned long index );
 };
@@ -80,6 +81,7 @@ public:
 
     std::size_t get_count() const;
     const tempo_entry & operator [] ( std::size_t p_index ) const;
+	tempo_entry & operator [] ( std::size_t p_index );
 };
 
 struct system_exclusive_entry
@@ -233,6 +235,13 @@ public:
 
     void promote_to_type1();
 
+	void trim_start();
+
+private:
+	void trim_range_of_tracks(unsigned long start, unsigned long end);
+	void trim_tempo_map(unsigned long p_index, unsigned long base_timestamp);
+
+public:
     unsigned long get_subsong_count() const;
     unsigned long get_subsong( unsigned long p_index ) const;
 
