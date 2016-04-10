@@ -1066,15 +1066,18 @@ void midi_container::get_meta_data( unsigned long subsong, midi_meta_data & p_ou
 
 void midi_container::trim_tempo_map( unsigned long p_index, unsigned long base_timestamp )
 {
-	tempo_map & map = m_tempo_map[ p_index ];
-
-	for ( unsigned long i = 0, j = map.get_count(); i < j; ++i )
+	if ( p_index < m_tempo_map.size() )
 	{
-		tempo_entry & entry = map[ i ];
-		if ( entry.m_timestamp >= base_timestamp )
-			entry.m_timestamp -= base_timestamp;
-		else
-			entry.m_timestamp = 0;
+		tempo_map & map = m_tempo_map[ p_index ];
+
+		for ( unsigned long i = 0, j = map.get_count(); i < j; ++i )
+		{
+			tempo_entry & entry = map[ i ];
+			if ( entry.m_timestamp >= base_timestamp )
+				entry.m_timestamp -= base_timestamp;
+			else
+				entry.m_timestamp = 0;
+		}
 	}
 }
 
