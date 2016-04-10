@@ -1169,6 +1169,47 @@ void midi_container::trim_start()
 	}
 }
 
+void midi_container::split_by_instrument_changes()
+{
+	if (m_form != 1) /* This would literally die on anything else */
+		return;
+	
+	for (unsigned long i = 0, j = m_tracks.size(); i < j; ++i)
+	{
+		const midi_track & source_track = m_tracks[0];
+		
+		midi_track output_track;
+		midi_track program_change;
+		
+		for (unsigned long k = 0, l = source_track.get_count(); k < l; ++k)
+		{
+			const midi_event & event = source_track[ k ];
+			if ( event.m_type == midi_event::program_change || 
+			   ( event.m_type == midi_event::control_change &&
+			     (event.m_data[0] == 0 || event.m_data[0] == 0x20)))
+			{
+				program_change.add_event( event );
+			}
+			else
+			{
+				if (program_change.get_count())
+				{
+					if (output_track.get_count())
+						m_tracks.push_back( output_track );
+					output_track = program_change;
+					program_change = midi_track();
+				}
+				output_track.add_event( event );				
+			}
+		}
+		
+		if (output_track.get_count())
+			m_tracks.push_back(output_track);
+		
+		m_tracks.erase(m_tracks.begin(), m_tracks.begin() + 1);
+	}
+}
+
 void midi_container::scan_for_loops( bool p_xmi_loops, bool p_marker_loops, bool p_rpgmaker_loops )
 {
     std::vector<uint8_t> data;

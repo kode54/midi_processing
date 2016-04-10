@@ -242,6 +242,8 @@ private:
 	void trim_tempo_map(unsigned long p_index, unsigned long base_timestamp);
 
 public:
+	void split_by_instrument_changes();
+	
     unsigned long get_subsong_count() const;
     unsigned long get_subsong( unsigned long p_index ) const;
 
