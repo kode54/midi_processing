@@ -1179,8 +1179,10 @@ void midi_container::split_by_instrument_changes()
 	
 	for (unsigned long i = 0, j = m_tracks.size(); i < j; ++i)
 	{
-		const midi_track & source_track = m_tracks[0];
-		
+		midi_track source_track = m_tracks[0];
+
+		m_tracks.erase(m_tracks.begin());	
+
 		midi_track output_track;
 		midi_track program_change;
 		
@@ -1208,8 +1210,6 @@ void midi_container::split_by_instrument_changes()
 		
 		if (output_track.get_count())
 			m_tracks.push_back(output_track);
-		
-		m_tracks.erase(m_tracks.begin(), m_tracks.begin() + 1);
 	}
 }
 
