@@ -106,7 +106,7 @@ bool midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_it
             buffer[ 0 ] = 0xF0;
             std::copy( it, it + data_count, buffer.begin() + 1 );
             it += data_count;
-            last_sysex_length = data_count;
+            last_sysex_length = data_count + 1;
             last_sysex_timestamp = current_timestamp;
         }
         else if ( event_code == 0xF7 ) // SysEx continuation
