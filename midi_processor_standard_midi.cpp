@@ -67,7 +67,7 @@ bool midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_it
         {
             if ( last_sysex_length )
             {
-                track.add_event( midi_event( last_sysex_timestamp, midi_event::extended, 0, &buffer[0], last_sysex_length + 1 ) );
+                track.add_event( midi_event( last_sysex_timestamp, midi_event::extended, 0, &buffer[0], last_sysex_length ) );
                 last_sysex_length = 0;
             }
             
@@ -95,7 +95,7 @@ bool midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_it
         {
             if ( last_sysex_length )
             {
-                track.add_event( midi_event( last_sysex_timestamp, midi_event::extended, 0, &buffer[0], last_sysex_length + 1 ) );
+                track.add_event( midi_event( last_sysex_timestamp, midi_event::extended, 0, &buffer[0], last_sysex_length ) );
                 last_sysex_length = 0;
             }
             
@@ -115,7 +115,7 @@ bool midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_it
             int data_count = decode_delta( it, end );
             if ( data_count < 0 ) return false;
             if ( end - it < data_count ) return false;
-            buffer.resize( last_sysex_length + data_count + 1 );
+            buffer.resize( last_sysex_length + data_count );
             std::copy( it, it + data_count, buffer.begin() + last_sysex_length );
             it += data_count;
             last_sysex_length += data_count;
@@ -124,7 +124,7 @@ bool midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_it
         {
             if ( last_sysex_length )
             {
-                track.add_event( midi_event( last_sysex_timestamp, midi_event::extended, 0, &buffer[0], last_sysex_length + 1 ) );
+                track.add_event( midi_event( last_sysex_timestamp, midi_event::extended, 0, &buffer[0], last_sysex_length ) );
                 last_sysex_length = 0;
             }
 
