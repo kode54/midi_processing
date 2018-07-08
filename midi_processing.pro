@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       -= core gui
+CONFIG -= qt
 
 TARGET = midi_processing
 TEMPLATE = lib
