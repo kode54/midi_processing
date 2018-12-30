@@ -242,7 +242,9 @@ private:
     void trim_tempo_map(unsigned long p_index, unsigned long base_timestamp);
 
 public:
-    void split_by_instrument_changes();
+	typedef std::string(*split_callback)(uint8_t bank_msb, uint8_t bank_lsb, uint8_t instrument);
+
+	void split_by_instrument_changes(split_callback cb = NULL);
 
     unsigned long get_subsong_count() const;
     unsigned long get_subsong( unsigned long p_index ) const;

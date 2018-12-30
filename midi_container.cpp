@@ -1177,7 +1177,7 @@ void midi_container::trim_start()
     }
 }
 
-void midi_container::split_by_instrument_changes()
+void midi_container::split_by_instrument_changes(split_callback cb)
 {
     if (m_form != 1) /* This would literally die on anything else */
         return;
@@ -1207,7 +1207,37 @@ void midi_container::split_by_instrument_changes()
                     if (output_track.get_count())
                         m_tracks.push_back( output_track );
                     output_track = program_change;
-                    program_change = midi_track();
+					if (cb)
+					{
+						unsigned long timestamp = 0;
+						uint8_t bank_msb = 0, bank_lsb = 0, instrument = 0;
+						for (int i = 0, j = program_change.get_count(); i < j; ++i)
+						{
+							const midi_event & ev = program_change[i];
+							if (ev.m_type == midi_event::program_change)
+								instrument = ev.m_data[0];
+							else if (ev.m_data[0] == 0)
+								bank_msb = ev.m_data[1];
+							else
+								bank_lsb = ev.m_data[1];
+							if (ev.m_timestamp > timestamp)
+								timestamp = ev.m_timestamp;
+						}
+
+						std::string name = cb(bank_msb, bank_lsb, instrument);
+
+						std::vector<uint8_t> data;
+
+						data.resize(name.length() + 2);
+
+						data[0] = 0xFF;
+						data[1] = 0x03;
+
+						std::copy(name.begin(), name.end(), data.begin() + 2);
+
+						output_track.add_event(midi_event(timestamp, midi_event::extended, 0, &data[0], data.size()));
+					}
+					program_change = midi_track();
                 }
                 output_track.add_event( event );
             }
