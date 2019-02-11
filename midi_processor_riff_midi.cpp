@@ -139,8 +139,9 @@ bool midi_processor::process_riff_midi( std::vector<uint8_t> const& p_file, midi
             uint32_t type = toInt32LE( it + 8 );
             if ( type == 1 )
             {
-                extra_buffer.resize( chunk_size - 4 );
+                extra_buffer.resize( chunk_size - 4 + 1 );
                 std::copy( it + 12, it + 8 + chunk_size, extra_buffer.begin() );
+				extra_buffer[ chunk_size - 4 ] = '\0';
                 meta_data.add_item( midi_meta_data_item( 0, "display_name", (const char *) &extra_buffer[0] ) );
             }
             it += 8 + chunk_size;
@@ -170,8 +171,9 @@ bool midi_processor::process_riff_midi( std::vector<uint8_t> const& p_file, midi
                                 break;
                             }
                         }
-                        extra_buffer.resize( field_size );
+                        extra_buffer.resize( field_size + 1 );
                         std::copy( it + 8, it + 8 + field_size, extra_buffer.begin() );
+						extra_buffer[ field_size ] = '\0';
                         it += 8 + field_size;
                         meta_data.add_item( midi_meta_data_item( 0, field.c_str(), ( const char * ) &extra_buffer[0] ) );
                         if ( field_size & 1 && it != chunk_end ) ++it;
