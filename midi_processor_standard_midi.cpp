@@ -5,6 +5,8 @@ bool midi_processor::is_standard_midi( std::vector<uint8_t> const& p_file )
     if ( p_file.size() < 18 ) return false;
     if ( p_file[ 0 ] != 'M' || p_file[ 1 ] != 'T' || p_file[ 2 ] != 'h' || p_file[ 3 ] != 'd') return false;
     if ( p_file[ 4 ] != 0 || p_file[ 5 ] != 0 || p_file[ 6 ] != 0 || p_file[ 7 ] != 6 ) return false;
+    if ( p_file[ 10 ] == 0 && p_file[ 11 ] == 0 ) return false; // no tracks
+    if ( p_file[ 12 ] == 0 && p_file[ 13 ] == 0 ) return false; // dtx == 0, will cause division by zero on tempo calculations
     if ( p_file[ 14 ] != 'M' || p_file[ 15 ] != 'T' || p_file[ 16 ] != 'r' || p_file[ 17 ] != 'k' ) return false;
     return true;
 }
@@ -180,6 +182,9 @@ bool midi_processor::process_standard_midi( std::vector<uint8_t> const& p_file, 
 
     uint16_t track_count_16 = ( it[2] << 8 ) | it[3];
     uint16_t dtx = ( it[4] << 8 ) | it[5];
+
+    if ( !track_count_16 || !dtx )
+        return false;
 
     it += 6;
 

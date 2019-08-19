@@ -49,6 +49,8 @@ bool midi_processor::process_hmp( std::vector<uint8_t> const& p_file, midi_conta
         if ( p_file.size() <= 0x4D )
             return false;
         dtx = ( p_file[ 0x4C ] << 16 ) | p_file[ 0x4D ];
+        if ( !dtx ) // dtx == 0, will cause division by zero on tempo calculations
+            return false;
     }
 
     p_out.initialize( 1, dtx );

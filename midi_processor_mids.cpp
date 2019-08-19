@@ -30,6 +30,8 @@ bool midi_processor::process_mids( std::vector<uint8_t> const& p_file, midi_cont
         time_format = it[ 0 ] | ( it[ 1 ] << 8 ) | ( it[ 2 ] << 16 ) | ( it[ 3 ] << 24 );
         it += 4;
         fmt_size -= 4;
+        if ( !time_format ) // dtx == 0, will cause division by zero on tempo calculations
+            return false;
     }
     if ( fmt_size >= 4 )
     {
