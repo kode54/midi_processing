@@ -1248,7 +1248,7 @@ void midi_container::split_by_instrument_changes(split_callback cb)
     }
 }
 
-void midi_container::scan_for_loops( bool p_xmi_loops, bool p_marker_loops, bool p_rpgmaker_loops )
+void midi_container::scan_for_loops( bool p_xmi_loops, bool p_marker_loops, bool p_rpgmaker_loops, bool p_touhou_loops )
 {
     std::vector<uint8_t> data;
 
@@ -1261,6 +1261,54 @@ void midi_container::scan_for_loops( bool p_xmi_loops, bool p_marker_loops, bool
     {
         m_timestamp_loop_start[ i ] = ~0UL;
         m_timestamp_loop_end[ i ] = ~0UL;
+    }
+
+    if ( p_touhou_loops && m_form == 0 )
+    {
+        bool loop_start_found = false;
+        bool loop_end_found = false;
+        bool errored = false;
+
+        for ( unsigned long i = 0; !errored && i < m_tracks.size(); ++i )
+        {
+            const midi_track & track = m_tracks[ i ];
+            for ( unsigned long j = 0; !errored && j < track.get_count(); ++j )
+            {
+                const midi_event & event = track[ j ];
+                if ( event.m_type == midi_event::control_change )
+                {
+                    if ( event.m_data[ 0 ] == 2 )
+                    {
+                        if ( event.m_data[ 1 ] != 0 ||
+                             loop_start_found)
+                        {
+                            errored = true;
+                            break;
+                        }
+                        m_timestamp_loop_start[ 0 ] = event.m_timestamp;
+                        loop_start_found = true;
+                    }
+                    if ( event.m_data[ 0 ] == 4 )
+                    {
+                        if ( event.m_data[ 1 ] != 0 ||
+                             !loop_start_found ||
+                             loop_end_found )
+                        {
+                            errored = true;
+                            break;
+                        }
+                        m_timestamp_loop_end[ 0 ] = event.m_timestamp;
+                        loop_end_found = true;
+                    }
+                }
+            }
+        }
+
+        if ( errored )
+        {
+            m_timestamp_loop_start[ 0 ] = ~0UL;
+            m_timestamp_loop_end[ 0 ] = ~0UL;
+        }
     }
 
     if ( p_rpgmaker_loops )
