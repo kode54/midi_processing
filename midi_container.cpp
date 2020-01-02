@@ -1279,8 +1279,7 @@ void midi_container::scan_for_loops( bool p_xmi_loops, bool p_marker_loops, bool
                 {
                     if ( event.m_data[ 0 ] == 2 )
                     {
-                        if ( event.m_data[ 1 ] != 0 ||
-                             loop_start_found)
+                        if ( event.m_data[ 1 ] != 0 )
                         {
                             errored = true;
                             break;
@@ -1290,9 +1289,7 @@ void midi_container::scan_for_loops( bool p_xmi_loops, bool p_marker_loops, bool
                     }
                     if ( event.m_data[ 0 ] == 4 )
                     {
-                        if ( event.m_data[ 1 ] != 0 ||
-                             !loop_start_found ||
-                             loop_end_found )
+                        if ( event.m_data[ 1 ] != 0 )
                         {
                             errored = true;
                             break;
