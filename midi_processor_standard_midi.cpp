@@ -7,7 +7,6 @@ bool midi_processor::is_standard_midi( std::vector<uint8_t> const& p_file )
     if ( p_file[ 4 ] != 0 || p_file[ 5 ] != 0 || p_file[ 6 ] != 0 || p_file[ 7 ] != 6 ) return false;
     if ( p_file[ 10 ] == 0 && p_file[ 11 ] == 0 ) return false; // no tracks
     if ( p_file[ 12 ] == 0 && p_file[ 13 ] == 0 ) return false; // dtx == 0, will cause division by zero on tempo calculations
-    if ( p_file[ 14 ] != 'M' || p_file[ 15 ] != 'T' || p_file[ 16 ] != 'r' || p_file[ 17 ] != 'k' ) return false;
     return true;
 }
 
