@@ -198,7 +198,7 @@ bool midi_processor::process_standard_midi( std::vector<uint8_t> const& p_file, 
         if ( it[0] != 'M' || it[1] != 'T' || it[2] != 'r' || it[3] != 'k' ) return false;
 
         uint32_t track_size = ( it[4] << 24 ) | ( it[5] << 16 ) | ( it[6] << 8 ) | it[7];
-        if ( (unsigned long)(end - it) < track_size ) return false;
+        if ( (unsigned long)(end - it) < 8 + track_size ) return false;
 
         it += 8;
 
