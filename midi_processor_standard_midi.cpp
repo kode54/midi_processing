@@ -30,8 +30,10 @@ bool midi_processor::process_standard_midi_count( std::vector<uint8_t> const& p_
     return true;
 }
 
-void midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_iterator & it, std::vector<uint8_t>::const_iterator end, midi_container & p_out, bool needs_end_marker )
+void midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_iterator & it, std::vector<uint8_t>::const_iterator end, midi_container & p_out )
 {
+    bool needs_end_marker = false;
+
     midi_track track;
     unsigned current_timestamp = 0;
     unsigned last_event_timestamp = 0;
@@ -56,10 +58,7 @@ void midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_it
         }
         
         if ( delta > 1000000 )
-        {
-            needs_end_marker = false;
             break;
-        }
 
         current_timestamp += delta;
         if ( it == end ) break;
@@ -87,16 +86,22 @@ void midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_it
                 buffer[ 0 ] = *it++;
                 ++data_bytes_read;
             }
+            bool command_valid = true;
             switch ( event_code & 0xF0 )
             {
             case 0xC0:
             case 0xD0:
                 break;
             default:
-                if ( it == end ) break;
+                if ( it == end )
+                {
+                    command_valid = false;
+                    break;
+                }
                 buffer[ data_bytes_read ] = *it++;
                 ++data_bytes_read;
             }
+            if ( !command_valid ) break;
             track.add_event( midi_event( last_event_timestamp = current_timestamp, (midi_event::event_type)(( event_code >> 4 ) - 8), event_code & 0x0F, &buffer[0], data_bytes_read ) );
         }
         else if ( event_code == 0xF0 )
@@ -107,6 +112,7 @@ void midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_it
                 last_sysex_length = 0;
             }
 
+            if ( it == end ) break;
             int data_count = decode_delta( it, end );
             if ( data_count < 0 ) break; /*throw exception_io_data( "Invalid System Exclusive message" );*/
             if ( end - it < data_count ) break;
@@ -120,6 +126,7 @@ void midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_it
         else if ( event_code == 0xF7 ) // SysEx continuation
         {
             if ( !last_sysex_length ) break;
+            if ( it == end ) break;
             int data_count = decode_delta( it, end );
             if ( data_count < 0 ) break;
             if ( end - it < data_count ) break;
@@ -138,6 +145,7 @@ void midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_it
 
             if ( it == end ) break;
             unsigned char meta_type = *it++;
+            if ( it == end ) break;
             int data_count = decode_delta( it, end );
             if ( data_count < 0 ) break; /*throw exception_io_data( "Invalid meta message" );*/
             if ( end - it < data_count ) break;
@@ -219,7 +227,7 @@ bool midi_processor::process_standard_midi( std::vector<uint8_t> const& p_file, 
 
         intptr_t track_data_offset = it - p_file.begin();
 
-        process_standard_midi_track( it, it + track_size, p_out, true );
+        process_standard_midi_track( it, it + track_size, p_out );
 
         track_data_offset += track_size;
         size_t messup_offset = it - p_file.begin();
