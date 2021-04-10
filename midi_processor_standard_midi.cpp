@@ -154,7 +154,7 @@ void midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_it
             buffer[ 1 ] = meta_type;
             std::copy( it, it + data_count, buffer.begin() + 2 );
             it += data_count;
-            if (meta_type == 0x2F)
+            if ( meta_type == 0x2F )
                 current_timestamp = last_event_timestamp;
             else
                 last_event_timestamp = current_timestamp;
@@ -226,6 +226,9 @@ bool midi_processor::process_standard_midi( std::vector<uint8_t> const& p_file, 
         it += 8;
 
         intptr_t track_data_offset = it - p_file.begin();
+
+        if ( end - it < track_size )
+            track_size = (uint32_t)(end - it);
 
         process_standard_midi_track( it, it + track_size, p_out );
 
