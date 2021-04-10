@@ -30,7 +30,7 @@ bool midi_processor::process_standard_midi_count( std::vector<uint8_t> const& p_
     return true;
 }
 
-void midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_iterator & it, std::vector<uint8_t>::const_iterator end, midi_container & p_out )
+void midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_iterator & it, std::vector<uint8_t>::const_iterator end, midi_container & p_out, bool is_gmf )
 {
     bool needs_end_marker = false;
 
@@ -79,7 +79,7 @@ void midi_processor::process_standard_midi_track( std::vector<uint8_t>::const_it
             }
 
             last_event_code = event_code;
-            if ( !needs_end_marker && ( event_code & 0xF0 ) == 0xE0 ) continue;
+            if ( is_gmf && ( event_code & 0xF0 ) == 0xE0 ) continue;
             if ( data_bytes_read < 1 )
             {
                 if ( it == end ) break;
@@ -227,10 +227,10 @@ bool midi_processor::process_standard_midi( std::vector<uint8_t> const& p_file, 
 
         intptr_t track_data_offset = it - p_file.begin();
 
-        if ( end - it < track_size )
+        if ( (unsigned long)(end - it) < track_size )
             track_size = (uint32_t)(end - it);
 
-        process_standard_midi_track( it, it + track_size, p_out );
+        process_standard_midi_track( it, it + track_size, p_out, false );
 
         track_data_offset += track_size;
         size_t messup_offset = it - p_file.begin();
