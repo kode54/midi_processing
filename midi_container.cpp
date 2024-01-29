@@ -746,6 +746,13 @@ void midi_container::serialize_as_standard_midi_file( std::vector<uint8_t> & p_m
 {
     if ( !m_tracks.size() ) return;
 
+    std::vector<midi_track> tracks;
+
+    if ( m_form > 0 )
+        tracks = m_tracks;
+    else
+        tracks.push_back( demote_to_form_0() );
+
     std::vector<uint8_t> data;
 
     const char signature[] = "MThd";
@@ -756,14 +763,14 @@ void midi_container::serialize_as_standard_midi_file( std::vector<uint8_t> & p_m
     p_midi_file.push_back( 6 );
     p_midi_file.push_back( 0 );
     p_midi_file.push_back( m_form );
-    p_midi_file.push_back( (uint8_t) (m_tracks.size() >> 8) );
-    p_midi_file.push_back( (uint8_t) m_tracks.size() );
+    p_midi_file.push_back( (uint8_t) (tracks.size() >> 8) );
+    p_midi_file.push_back( (uint8_t) tracks.size() );
     p_midi_file.push_back( (m_dtx >> 8) );
     p_midi_file.push_back( m_dtx );
 
-    for ( unsigned i = 0; i < m_tracks.size(); ++i )
+    for ( unsigned i = 0; i < tracks.size(); ++i )
     {
-        const midi_track & track = m_tracks[ i ];
+        const midi_track & track = tracks[ i ];
         unsigned long last_timestamp = 0;
         unsigned char last_event_code = 0xFF;
         std::size_t length_offset;
