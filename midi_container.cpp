@@ -723,6 +723,25 @@ void midi_container::serialize_as_stream( unsigned long subsong,
     loop_end = local_loop_end;
 }
 
+midi_track midi_container::demote_to_form_0() const
+{
+    if ( m_tracks.size() < 1 ) return midi_track();
+
+    midi_track ttrack = m_tracks[ 0 ];
+
+    for ( unsigned i = 1; i < m_tracks.size(); ++i )
+    {
+        const midi_track & track = m_tracks[ i ];
+
+        for ( unsigned j = 0; j < track.get_count(); ++j )
+        {
+            ttrack.add_event( track[ j ] );
+        }
+    }
+
+    return ttrack;
+}
+
 void midi_container::serialize_as_standard_midi_file( std::vector<uint8_t> & p_midi_file ) const
 {
     if ( !m_tracks.size() ) return;

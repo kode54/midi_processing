@@ -206,6 +206,8 @@ private:
         }
     }
 
+    midi_track demote_to_form_0() const;
+
 public:
     midi_container() { m_device_names.resize( 16 ); }
 
