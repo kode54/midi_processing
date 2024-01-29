@@ -233,7 +233,7 @@ public:
 
     void serialize_as_standard_midi_file( std::vector<uint8_t> & p_midi_file ) const;
 
-    void promote_to_type1();
+    void promote_to_form_1();
 
     void trim_start();
 

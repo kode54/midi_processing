@@ -821,7 +821,7 @@ void midi_container::serialize_as_standard_midi_file( std::vector<uint8_t> & p_m
     }
 }
 
-void midi_container::promote_to_type1()
+void midi_container::promote_to_form_1()
 {
     if ( m_form == 0 && m_tracks.size() <= 2 )
     {
