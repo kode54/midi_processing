@@ -1247,6 +1247,63 @@ void midi_container::split_by_instrument_changes(split_callback cb)
     }
 }
 
+static std::string get_track_name(const midi_track & track)
+{
+    for (unsigned long i = 0, n = track.get_count(); i < n; ++i)
+    {
+        const midi_event & event = track[i];
+        if (event.m_type == midi_event::extended && event.get_data_count() >= 2)
+        {
+            uint8_t header[2];
+            event.copy_data(header, 0, 2);
+            if (header[0] == 0xFF && header[1] == 0x03)
+            {
+                unsigned long len = event.get_data_count() - 2;
+                std::vector<uint8_t> buf(len);
+                event.copy_data(&buf[0], 2, len);
+                return std::string(buf.begin(), buf.end());
+            }
+        }
+    }
+    return std::string();
+}
+
+void midi_container::sort_tracks_by_name()
+{
+    if (m_form != 1 || m_tracks.size() < 2)
+        return;
+
+    /* Keep track 0 (tempo/conductor track) in place, sort the rest */
+    std::sort(m_tracks.begin() + 1, m_tracks.end(),
+        [](const midi_track & a, const midi_track & b)
+        {
+            return get_track_name(a) < get_track_name(b);
+        });
+}
+
+void midi_container::remove_tracks_with_no_notes()
+{
+    if (m_form != 1 || m_tracks.size() < 2)
+        return;
+
+    /* Keep track 0 (tempo/conductor), remove any other track that has no note events */
+    for (unsigned long i = m_tracks.size() - 1; i >= 1; --i)
+    {
+        bool has_notes = false;
+        const midi_track & track = m_tracks[i];
+        for (unsigned long k = 0, n = track.get_count(); k < n; ++k)
+        {
+            if (track[k].m_type == midi_event::note_on || track[k].m_type == midi_event::note_off)
+            {
+                has_notes = true;
+                break;
+            }
+        }
+        if (!has_notes)
+            m_tracks.erase(m_tracks.begin() + i);
+    }
+}
+
 void midi_container::scan_for_loops( bool p_xmi_loops, bool p_marker_loops, bool p_rpgmaker_loops, bool p_touhou_loops )
 {
     std::vector<uint8_t> data;

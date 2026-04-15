@@ -249,6 +249,10 @@ public:
 
     void split_by_instrument_changes(split_callback cb = NULL);
 
+    void sort_tracks_by_name();
+
+    void remove_tracks_with_no_notes();
+
     unsigned long get_subsong_count() const;
     unsigned long get_subsong( unsigned long p_index ) const;
 
