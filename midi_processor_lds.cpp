@@ -45,6 +45,7 @@ static const unsigned char tremtab[] = {
 
 bool midi_processor::is_lds( std::vector<uint8_t> const& p_file, const char * p_extension )
 {
+    if ( !p_extension || !*p_extension ) return false;
     if ( strcasecmp( p_extension, "LDS" ) ) return false;
     if ( p_file.size() < 1 ) return false;
     if ( p_file[ 0 ] > 2 ) return false;
